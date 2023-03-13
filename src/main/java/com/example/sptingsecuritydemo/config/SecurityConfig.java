@@ -2,7 +2,7 @@ package com.example.sptingsecuritydemo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -16,6 +16,7 @@ import com.example.sptingsecuritydemo.model.Role;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
 	@Bean
@@ -25,13 +26,14 @@ public class SecurityConfig {
 				User.builder()
 				.username("user")
 				.password(passwordEncoder().encode("userPass"))
-				.roles(Role.USER.name())
+				.authorities(Role.USER.getAuthorities())
 				.build());
 		manager.createUser(
 				User.builder()
 				.username("admin")
 				.password(passwordEncoder().encode("adminPass"))
-				.roles(Role.ADMIN.name()).build());
+				.authorities(Role.ADMIN.getAuthorities())
+				.build());
 		return manager;
 	}
 	
@@ -41,9 +43,6 @@ public class SecurityConfig {
 		.disable()
 		.authorizeHttpRequests()
 		.requestMatchers("/").permitAll()
-		.requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-		.requestMatchers(HttpMethod.POST, "/api/**").hasRole(Role.ADMIN.name())
-		.requestMatchers(HttpMethod.DELETE, "/api/**").hasRole(Role.ADMIN.name())
 		.anyRequest()
 		.authenticated()
 		.and()
