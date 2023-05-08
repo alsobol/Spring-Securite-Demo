@@ -1,9 +1,8 @@
 package com.example.sptingsecuritydemo.rest;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,35 +13,41 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.sptingsecuritydemo.model.Developer;
+import com.example.sptingsecuritydemo.service.DeveloperService;
 
 @RestController
 @RequestMapping("api/v1/developers")
 public class DeveloperRestControllerV1 {
 
-	private List<Developer> developers = Stream.of(new Developer(1L, "Ivan", "Ivanov"),
-			new Developer(2L, "Sergey", "Sergeev"), new Developer(3L, "Petr", "Petrov")).collect(Collectors.toList());
+
+	private DeveloperService developerService;
+	
+	@Autowired
+	public DeveloperRestControllerV1(DeveloperService developerService) {
+		this.developerService = developerService;
+	}
 
 	@GetMapping
 	public List<Developer> getAll() {
-		return developers;
+		return developerService.getList();
 	}
 
 	@GetMapping("/{id}")
 	@PreAuthorize("hasAuthority('developers:read')")
 	public Developer getById(@PathVariable Long id) {
-		return developers.stream().filter(developer -> developer.getId().equals(id)).findFirst().orElse(null);
+		return developerService.getById(id).stream().filter(developer -> developer.getId().equals(id)).findFirst().orElse(null);
 	}
 
 	@PostMapping
 	@PreAuthorize("hasAuthority('developers:write')")
 	public Developer create(@RequestBody Developer developer) {
-		this.developers.add(developer);
+		this.developerService.save(developer);
 		return developer;
 	}
 
 	@DeleteMapping("{id}")
 	@PreAuthorize("hasAuthority('developers:write')")
 	public void deleteById(@PathVariable Long id) {
-		this.developers.removeIf(developer -> developer.getId().equals(id));
+		this.developerService.delete(id);
 	}
 }
